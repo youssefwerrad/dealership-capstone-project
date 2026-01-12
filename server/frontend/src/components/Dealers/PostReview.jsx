@@ -5,6 +5,7 @@ import "../assets/style.css";
 import Header from '../Header/Header';
 
 
+
 const PostReview = () => {
   const [dealer, setDealer] = useState({});
   const [review, setReview] = useState("");
@@ -13,6 +14,7 @@ const PostReview = () => {
   const [date, setDate] = useState("");
   const [carmodels, setCarmodels] = useState([]);
 
+
   let curr_url = window.location.href;
   let root_url = curr_url.substring(0,curr_url.indexOf("postreview"));
   let params = useParams();
@@ -20,6 +22,7 @@ const PostReview = () => {
   let dealer_url = root_url+`djangoapp/dealer/${id}`;
   let review_url = root_url+`djangoapp/add_review`;
   let carmodels_url = root_url+`djangoapp/get_cars`;
+  
 
   const postreview = async ()=>{
     let name = sessionStorage.getItem("firstname")+" "+sessionStorage.getItem("lastname");
@@ -67,7 +70,7 @@ const PostReview = () => {
       method: "GET"
     });
     const retobj = await res.json();
-    
+
     if(retobj.status === 200) {
       let dealerobjs = Array.from(retobj.dealer)
       if(dealerobjs.length > 0)
@@ -80,7 +83,7 @@ const PostReview = () => {
       method: "GET"
     });
     const retobj = await res.json();
-    
+
     let carmodelsarr = Array.from(retobj.CarModels)
     setCarmodels(carmodelsarr)
   }
@@ -100,13 +103,13 @@ const PostReview = () => {
       Purchase Date <input type="date" onChange={(e) => setDate(e.target.value)}/>
       </div>
       <div className='input_field'>
-      Car Make 
+      Car Make
       <select name="cars" id="cars" onChange={(e) => setModel(e.target.value)}>
       <option value="" selected disabled hidden>Choose Car Make and Model</option>
       {carmodels.map(carmodel => (
           <option value={carmodel.CarMake+" "+carmodel.CarModel}>{carmodel.CarMake} {carmodel.CarModel}</option>
       ))}
-      </select>        
+      </select>
       </div >
 
       <div className='input_field'>
