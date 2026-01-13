@@ -30,9 +30,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
-    'https://youssefwerra-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai']
+    'https://youssefwerra-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai'
+    ]
+    
 CSRF_TRUSTED_ORIGINS = [
-    'https://youssefwerra-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai']
+    'https://youssefwerra-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai'
+    ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
