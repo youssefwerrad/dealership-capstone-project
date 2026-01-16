@@ -27,4 +27,3 @@ spec:
         - containerPort: 8000
           protocol: TCP
       restartPolicy: Always
-
