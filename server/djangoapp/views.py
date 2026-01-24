@@ -133,22 +133,29 @@ def get_dealer_details(request, dealer_id):
 
 
 def add_review(request):
+    print("=== ADD_REVIEW CALLED ===")
+    print(f"User authenticated: {not request.user.is_anonymous}")
+
     if not request.user.is_anonymous:
         data = json.loads(request.body)
+        print(f"Received data: {data}")
+
         try:
             # Add user's name
             data["name"] = f"{request.user.first_name} {request.user.last_name}"
+            print(f"User name: {data['name']}")
 
             # Analyze sentiment
             if data.get("review"):
                 sentiment_response = analyze_review_sentiments(data["review"])
+                print(f"Sentiment response: {sentiment_response}")
                 if sentiment_response and 'sentiment' in sentiment_response:
                     data["sentiment"] = sentiment_response["sentiment"]
                 else:
                     data["sentiment"] = "neutral"
 
             # Post review to MongoDB
-            print(f"Posting review: {data}")
+            print(f"Posting review to backend: {data}")
             response = post_review(data)
             print(f"Backend response: {response}")
 
@@ -160,16 +167,19 @@ def add_review(request):
             else:
                 return JsonResponse({
                     "status": 500,
-                    "message": "Failed to post review"
+                    "message": "Failed to post review to backend"
                 })
 
         except Exception as e:
-            print(f"Error in add_review: {e}")
+            print(f"ERROR in add_review: {e}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({
                 "status": 401,
                 "message": f"Error: {str(e)}"
             })
     else:
+        print("User not authenticated!")
         return JsonResponse({
             "status": 403,
             "message": "Unauthorized"
