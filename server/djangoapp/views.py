@@ -141,9 +141,13 @@ def add_review(request):
         print(f"Received data: {data}")
 
         try:
-            # Add user's name
+            # FIX: Convert data types
             data["name"] = f"{request.user.first_name} {request.user.last_name}"
-            print(f"User name: {data['name']}")
+            data["dealership"] = int(data["dealership"])  # Convert to int
+            data["car_year"] = int(data["car_year"])      # Convert to int
+            data["purchase"] = bool(data["purchase"])      # Ensure boolean
+
+            print(f"Converted data: {data}")
 
             # Analyze sentiment
             if data.get("review"):
@@ -159,7 +163,7 @@ def add_review(request):
             response = post_review(data)
             print(f"Backend response: {response}")
 
-            if response:
+            if response and 'error' not in response:
                 return JsonResponse({
                     "status": 200,
                     "message": "Review posted successfully"
@@ -167,7 +171,7 @@ def add_review(request):
             else:
                 return JsonResponse({
                     "status": 500,
-                    "message": "Failed to post review to backend"
+                    "message": f"Failed: {response.get('error', 'Unknown error')}"
                 })
 
         except Exception as e:
