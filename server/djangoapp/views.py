@@ -133,13 +133,44 @@ def get_dealer_details(request, dealer_id):
 
 
 def add_review(request):
-    if request.user.is_anonymous:
+    if not request.user.is_anonymous:
         data = json.loads(request.body)
         try:
-            post_review(data)
-            return JsonResponse({"status": 200})
-        except BaseException:
-            return JsonResponse(
-                {"status": 401, "message": "Error in posting review"})
+            # Add user's name
+            data["name"] = f"{request.user.first_name} {request.user.last_name}"
+
+            # Analyze sentiment
+            if data.get("review"):
+                sentiment_response = analyze_review_sentiments(data["review"])
+                if sentiment_response and 'sentiment' in sentiment_response:
+                    data["sentiment"] = sentiment_response["sentiment"]
+                else:
+                    data["sentiment"] = "neutral"
+
+            # Post review to MongoDB
+            print(f"Posting review: {data}")
+            response = post_review(data)
+            print(f"Backend response: {response}")
+
+            if response:
+                return JsonResponse({
+                    "status": 200,
+                    "message": "Review posted successfully"
+                })
+            else:
+                return JsonResponse({
+                    "status": 500,
+                    "message": "Failed to post review"
+                })
+
+        except Exception as e:
+            print(f"Error in add_review: {e}")
+            return JsonResponse({
+                "status": 401,
+                "message": f"Error: {str(e)}"
+            })
     else:
-        return JsonResponse({"status": 403, "message": "Unauthorized"})
+        return JsonResponse({
+            "status": 403,
+            "message": "Unauthorized"
+        })
