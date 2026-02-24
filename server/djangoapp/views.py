@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .populate import initiate
 from .models import CarMake, CarModel
 from .restapis import get_request, analyze_review_sentiments, post_review
+from datetime import datetime
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -131,32 +133,43 @@ def get_dealer_details(request, dealer_id):
 
 # Create a `add_review` view to submit a review
 
-
+@csrf_exempt
 def add_review(request):
     print("=== ADD_REVIEW CALLED ===")
-    print(f"User authenticated: {not request.user.is_anonymous}")
 
     if not request.user.is_anonymous:
         data = json.loads(request.body)
         print(f"Received data: {data}")
 
         try:
-            # FIX: Convert data types
+            # Convert data types
             data["name"] = f"{request.user.first_name} {request.user.last_name}"
-            data["dealership"] = int(data["dealership"])  # Convert to int
-            data["car_year"] = int(data["car_year"])      # Convert to int
-            data["purchase"] = bool(data["purchase"])      # Ensure boolean
+            data["dealership"] = int(data["dealership"])
+            data["car_year"] = int(data["car_year"])
+            data["purchase"] = bool(data["purchase"])
+
+            # CRITICAL: Convert date format from YYYY-MM-DD to MM/DD/YYYY
+            if "purchase_date" in data and data["purchase_date"]:
+                try:
+                    # Parse YYYY-MM-DD format
+                    date_obj = datetime.strptime(data["purchase_date"], "%Y-%m-%d")
+                    # Convert to MM/DD/YYYY format
+                    data["purchase_date"] = date_obj.strftime("%m/%d/%Y")
+                    print(f"Converted date: {data['purchase_date']}")
+                except Exception as date_error:
+                    print(f"Date conversion error: {date_error}")
 
             print(f"Converted data: {data}")
 
-            # Analyze sentiment
+            # Analyze sentiment (default to neutral if service unavailable)
+            data["sentiment"] = "neutral"
             if data.get("review"):
-                sentiment_response = analyze_review_sentiments(data["review"])
-                print(f"Sentiment response: {sentiment_response}")
-                if sentiment_response and 'sentiment' in sentiment_response:
-                    data["sentiment"] = sentiment_response["sentiment"]
-                else:
-                    data["sentiment"] = "neutral"
+                try:
+                    sentiment_response = analyze_review_sentiments(data["review"])
+                    if sentiment_response and 'sentiment' in sentiment_response:
+                        data["sentiment"] = sentiment_response["sentiment"]
+                except:
+                    pass
 
             # Post review to MongoDB
             print(f"Posting review to backend: {data}")
@@ -169,9 +182,11 @@ def add_review(request):
                     "message": "Review posted successfully"
                 })
             else:
+                error_msg = response.get('error', 'Unknown error') if response else 'No response'
+                print(f"ERROR FROM BACKEND: {error_msg}")
                 return JsonResponse({
                     "status": 500,
-                    "message": f"Failed: {response.get('error', 'Unknown error')}"
+                    "message": f"Failed: {error_msg}"
                 })
 
         except Exception as e:
@@ -183,7 +198,6 @@ def add_review(request):
                 "message": f"Error: {str(e)}"
             })
     else:
-        print("User not authenticated!")
         return JsonResponse({
             "status": 403,
             "message": "Unauthorized"

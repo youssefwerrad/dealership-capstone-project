@@ -48,8 +48,14 @@ def analyze_review_sentiments(text):
 def post_review(data_dict):
     request_url = f"{backend_url}/insert_review"
 
+    print(f"=== POSTING TO MONGODB ===")
+    print(f"URL: {request_url}")
+    print(f"Data being sent: {data_dict}")
+
     try:
         response = requests.post(request_url, json=data_dict, timeout=10)
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
         return response.json()
     except Exception as e:
         print(f"Post error: {e}")
